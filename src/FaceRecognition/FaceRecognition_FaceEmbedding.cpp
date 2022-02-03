@@ -7,7 +7,6 @@
 #include <dlib/image_io.h> 
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <opencv2/core/types_c.h>
-#include "MyImage.h"
 #include <opencv2/core/core.hpp>
 //#include <opencv2/imgcodecs.hpp> 
 #include <dlib/image_processing.h>
@@ -16,7 +15,7 @@
 #include <opencv2/imgproc/imgproc.hpp> 
 using namespace dlib;
 using namespace std; 
-using namespace cv;
+using namespace cv; 
   
 template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
 using residual = add_prev1<block<N,BN,1,tag1<SUBNET>>>;
@@ -60,7 +59,7 @@ JNIEXPORT jlong JNICALL Java_FaceRecognition_FaceEmbedding_allocateMemory
     mem->i = 0;
     deserialize(cPathToDnnData) >> mem->net;
     return (jlong)mem;
-}
+} 
 
 JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
   (JNIEnv *env, jobject, jbyteArray imageData, jint width, jint height, jlong ptr) {
@@ -68,10 +67,7 @@ JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
       uchar *data = (uchar*)env->GetPrimitiveArrayCritical(imageData, 0);
       Mat image(height, width, CV_8UC3, data);
     
-      //imwrite("/home/r/eclipse-workspace/foo/src/FaceRecognition/ochneeee.png", image);
-      // dlib::matrix<rgb_pixel> dlibFrame;
-      // dlib::assign_image(dlibFrame, dlib::cv_image<rgb_pixel>(image));
-
+      
       // std::vector<matrix<rgb_pixel>> faces;
 
       // matrix<rgb_pixel> sizeImg(150, 150);
@@ -85,9 +81,12 @@ JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
 //cout << "face descriptor for one face: " << trans(face_descriptors[0]) << endl;
      //  std::cout<<face_descriptor(0)<<std::endl;;
       env->ReleasePrimitiveArrayCritical(imageData, data, 0);
+      // Cv uses bgr. We want rgb.
       cvtColor(image, image,  cv::COLOR_BGR2RGB);
+      matrix<rgb_pixel> dlibFrame;
+      dlib::assign_image(dlibFrame, dlib::cv_image<rgb_pixel>(image));
 
-       jdoubleArray ret = env->NewDoubleArray(128);
+      jdoubleArray ret = env->NewDoubleArray(128);
       //  if (ret == NULL)
       //   return NULL;
     //env->SetDoubleArrayRegion(ret, 0, 128, trans(face_descriptors[0]));
