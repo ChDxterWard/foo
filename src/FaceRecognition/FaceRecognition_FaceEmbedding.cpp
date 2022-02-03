@@ -4,10 +4,19 @@
 #include <dlib/gui_widgets.h>
 #include <dlib/clustering.h>
 #include <dlib/string.h>
-#include <dlib/image_io.h>
+#include <dlib/image_io.h> 
 #include <dlib/image_processing/frontal_face_detector.h>
+#include <opencv2/core/types_c.h>
+#include "MyImage.h"
+#include <opencv2/core/core.hpp>
+//#include <opencv2/imgcodecs.hpp> 
+#include <dlib/image_processing.h>
+#include <dlib/image_transforms.h>
+#include <dlib/opencv/cv_image.h>
+#include <opencv2/imgproc/imgproc.hpp> 
 using namespace dlib;
 using namespace std; 
+using namespace cv;
   
 template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
 using residual = add_prev1<block<N,BN,1,tag1<SUBNET>>>;
@@ -36,7 +45,7 @@ using anet_type = loss_metric<fc_no_bias<128,avg_pool_everything<
 
 typedef struct Memory_ {
     int i;  
-    anet_type net; 
+    anet_type net;  
 } Memory;  
 
 JNIEXPORT jlong JNICALL Java_FaceRecognition_FaceEmbedding_allocateMemory
@@ -49,26 +58,40 @@ JNIEXPORT jlong JNICALL Java_FaceRecognition_FaceEmbedding_allocateMemory
 		  return 0;
 	  }
     mem->i = 0;
-    std::cout<<mem->i<<std::endl;
     deserialize(cPathToDnnData) >> mem->net;
     return (jlong)mem;
 }
 
-JNIEXPORT void JNICALL Java_FaceRecognition_FaceEmbedding_detect
+JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
   (JNIEnv *env, jobject, jbyteArray imageData, jint width, jint height, jlong ptr) {
       Memory* mem = (Memory*)ptr;
-      jint len = env->GetArrayLength(imageData);
-      bool isRgb = len == 3 * width * height;
-      std::cout<<mem->i<<" ohyeee " << len << " | isRgb: " <<isRgb<<" | "<<3 * width * height<<" vs"<<len<<std::endl;
-      char *data = (char*)env->GetPrimitiveArrayCritical(imageData, 0);
-      
-      matrix<rgb_pixel> mat(1, len); 
-      for (int i = 0; i < len; i+=3) {
-        rgb_pixel p(data[i], data[i+1], data[i+2]); 
-        mat(0, i)=rgb_pixel;
-      }
-      
+      uchar *data = (uchar*)env->GetPrimitiveArrayCritical(imageData, 0);
+      Mat image(height, width, CV_8UC3, data);
+    
+      //imwrite("/home/r/eclipse-workspace/foo/src/FaceRecognition/ochneeee.png", image);
+      // dlib::matrix<rgb_pixel> dlibFrame;
+      // dlib::assign_image(dlibFrame, dlib::cv_image<rgb_pixel>(image));
+
+      // std::vector<matrix<rgb_pixel>> faces;
+
+      // matrix<rgb_pixel> sizeImg(150, 150);
+      // interpolate_quadratic a;
+      // resize_image(dlibFrame, sizeImg, a);
+
+     // faces.push_back(sizeImg);
+      //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
+      //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
+      //matrix<float,0,1> face_descriptor = face_descriptors[0];
+//cout << "face descriptor for one face: " << trans(face_descriptors[0]) << endl;
+     //  std::cout<<face_descriptor(0)<<std::endl;;
       env->ReleasePrimitiveArrayCritical(imageData, data, 0);
+      cvtColor(image, image,  cv::COLOR_BGR2RGB);
+
+       jdoubleArray ret = env->NewDoubleArray(128);
+      //  if (ret == NULL)
+      //   return NULL;
+    //env->SetDoubleArrayRegion(ret, 0, 128, trans(face_descriptors[0]));
+    return ret;  
 }
 
 JNIEXPORT void JNICALL Java_FaceRecognition_FaceEmbedding_freeMemory
