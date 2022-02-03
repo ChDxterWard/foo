@@ -70,10 +70,6 @@ JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
       
       // std::vector<matrix<rgb_pixel>> faces;
 
-      // matrix<rgb_pixel> sizeImg(150, 150);
-      // interpolate_quadratic a;
-      // resize_image(dlibFrame, sizeImg, a);
-
      // faces.push_back(sizeImg);
       //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
       //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
@@ -85,11 +81,15 @@ JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
       cvtColor(image, image,  cv::COLOR_BGR2RGB);
       matrix<rgb_pixel> dlibFrame;
       dlib::assign_image(dlibFrame, dlib::cv_image<rgb_pixel>(image));
-
+      matrix<rgb_pixel> sizeImg(150, 150);
+      interpolate_quadratic a;
+      resize_image(dlibFrame, sizeImg, a);
+      
       jdoubleArray ret = env->NewDoubleArray(128);
       //  if (ret == NULL)
       //   return NULL;
     //env->SetDoubleArrayRegion(ret, 0, 128, trans(face_descriptors[0]));
+    std::cout<<"vor return"<<std::endl;
     return ret;  
 }
 
