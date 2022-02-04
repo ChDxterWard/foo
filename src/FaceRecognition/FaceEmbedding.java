@@ -22,9 +22,24 @@ public class FaceEmbedding {
 		BufferedImage e1 = bar("/home/r/Bilder/e1.png");
 		BufferedImage e2 = bar("/home/r/Bilder/e2.png");
 
-		byte[] imageData = foo(bufferedImage);
-		//new FaceEmbedding().detect(imageData, bufferedImage.getWidth(), bufferedImage.getHeight(), mem);
-		new FaceEmbedding().encode(imageData, bufferedImage.getWidth(), bufferedImage.getHeight(), mem);
+		byte[] imageData1 = foo(bufferedImage);
+		byte[] imageData2 = foo(e1);
+		byte[] imageData3 = foo(e2);
+		float[] ret1 =new FaceEmbedding().encode(imageData1, bufferedImage.getWidth(), bufferedImage.getHeight(), mem);
+		float[] ret2 =new FaceEmbedding().encode(imageData2, bufferedImage.getWidth(), bufferedImage.getHeight(), mem);
+		float[] ret3 =new FaceEmbedding().encode(imageData3, bufferedImage.getWidth(), bufferedImage.getHeight(), mem);
+		System.out.println("e1 vs e2 " + calcDist(ret2, ret3));
+		System.out.println("e2 vs e1 " + calcDist(ret2, ret3));
+		System.out.println("e0 vs e1 " + calcDist(ret1, ret2));
+		System.out.println("e0 vs e2 " + calcDist(ret1, ret3));
+	}
+	static double calcDist(float[] a1, float[] a2) {
+		assert a1.length == a2.length;
+		double dist = .0;
+		for (int i = 0; i < a1.length; i++) {
+			dist += Math.pow(a1[i] - a2[i], 2);
+		}
+		return Math.sqrt(dist);
 	}
 	public static BufferedImage bar(String url) {
 		try {
@@ -78,6 +93,6 @@ public class FaceEmbedding {
 	
 
 	private native long allocateMemory(String pathToDnnData);
-	private native double[] encode(byte[] imageData, int width, int height, long pointer);
+	private native float[] encode(byte[] imageData, int width, int height, long pointer);
 	private native void freeMemory(long pointer);
 }

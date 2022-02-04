@@ -61,36 +61,44 @@ JNIEXPORT jlong JNICALL Java_FaceRecognition_FaceEmbedding_allocateMemory
     return (jlong)mem;
 } 
 
-JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
+JNIEXPORT jfloatArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
   (JNIEnv *env, jobject, jbyteArray imageData, jint width, jint height, jlong ptr) {
       Memory* mem = (Memory*)ptr;
       uchar *data = (uchar*)env->GetPrimitiveArrayCritical(imageData, 0);
       Mat image(height, width, CV_8UC3, data);
-    
-      
-      // std::vector<matrix<rgb_pixel>> faces;
-
-     // faces.push_back(sizeImg);
-      //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
-      //std::vector<matrix<float,0,1>> face_descriptors = mem->net(faces);
-      //matrix<float,0,1> face_descriptor = face_descriptors[0];
-//cout << "face descriptor for one face: " << trans(face_descriptors[0]) << endl;
-     //  std::cout<<face_descriptor(0)<<std::endl;;
       env->ReleasePrimitiveArrayCritical(imageData, data, 0);
       // Cv uses bgr. We want rgb.
       cvtColor(image, image,  cv::COLOR_BGR2RGB);
+      // Cv mat to dlib mat.
       matrix<rgb_pixel> dlibFrame;
       dlib::assign_image(dlibFrame, dlib::cv_image<rgb_pixel>(image));
-      matrix<rgb_pixel> sizeImg(150, 150);
-      interpolate_quadratic a;
+      // The resized image.
+      dlib::matrix<dlib::rgb_pixel> sizeImg(150, 150);
+      // Some interpolation is needed.
+      dlib::interpolate_quadratic a;
+      // Resize our image.
       resize_image(dlibFrame, sizeImg, a);
-      
-      jdoubleArray ret = env->NewDoubleArray(128);
-      //  if (ret == NULL)
-      //   return NULL;
-    //env->SetDoubleArrayRegion(ret, 0, 128, trans(face_descriptors[0]));
-    std::cout<<"vor return"<<std::endl;
-    return ret;  
+      // The list that will hold the one resized image of a face.
+      std::vector<matrix<rgb_pixel>> faces;
+      // Add the resized mat to the list.
+      faces.push_back(sizeImg);
+      // Calculate face embedding for the resized image of a face.
+      std::vector<dlib::matrix<jfloat,0,1>> face_descriptors = mem->net(faces);
+      if (face_descriptors.empty()) {
+        std::cerr<<"No face found."<<std::endl;
+        return NULL;
+      }
+      // Since there is only one face per image, we expect only one embedding.
+      dlib::matrix<jfloat,0,1> face_descriptor = face_descriptors[0];
+      // Create a array for the 128 embedding values.
+      jfloatArray faceEmbedding = env->NewFloatArray(128);
+      if (faceEmbedding == NULL) {
+        std::cerr<<"Return value is NULL"<<std::endl;
+        return NULL;
+      }
+    // Fill the array, that we like to return to java with the face descriptor values.
+    env->SetFloatArrayRegion(faceEmbedding, 0, 128, &face_descriptor(0,0));
+    return faceEmbedding;  
 }
 
 JNIEXPORT void JNICALL Java_FaceRecognition_FaceEmbedding_freeMemory

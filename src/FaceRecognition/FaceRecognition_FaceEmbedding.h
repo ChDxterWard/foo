@@ -18,9 +18,9 @@ JNIEXPORT jlong JNICALL Java_FaceRecognition_FaceEmbedding_allocateMemory
 /*
  * Class:     FaceRecognition_FaceEmbedding
  * Method:    encode
- * Signature: ([BIIJ)[D
+ * Signature: ([BIIJ)[F
  */
-JNIEXPORT jdoubleArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
+JNIEXPORT jfloatArray JNICALL Java_FaceRecognition_FaceEmbedding_encode
   (JNIEnv *, jobject, jbyteArray, jint, jint, jlong);
 
 /*
